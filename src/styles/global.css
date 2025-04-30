@@ -1,0 +1,61 @@
+:root {
+  /* Light Theme Colors */
+  --light-background: #F7F8FA;
+  --light-surface: #FFFFFF;
+  --light-text-primary: #1E293B;
+  --light-text-secondary: #64748B;
+  --light-border: #E2E8F0;
+  --light-input-background: #F1F5F9;
+  --light-button-background: #E2E8F0;
+  --light-button-hover: #CBD5E1;
+  --light-primary: #3B82F6;
+  --light-primary-hover: #2563EB;
+
+  /* Dark Theme Colors */
+  --dark-background: #0D1117;
+  --dark-surface: #161B22;
+  --dark-text-primary: #F8FAFC;
+  --dark-text-secondary: #94A3B8;
+  --dark-border: #30363D;
+  --dark-input-background: #21262D;
+  --dark-button-background: #30363D;
+  --dark-button-hover: #3B4048;
+  --dark-primary: #3B82F6;
+  --dark-primary-hover: #2563EB;
+}
+
+body.light {
+  --background: var(--light-background);
+  --surface: var(--light-surface);
+  --text-primary: var(--light-text-primary);
+  --text-secondary: var(--light-text-secondary);
+  --border: var(--light-border);
+  --input-background: var(--light-input-background);
+  --button-background: var(--light-button-background);
+  --button-hover: var(--light-button-hover);
+  --primary: var(--light-primary);
+  --primary-hover: var(--light-primary-hover);
+  --logo-filter: brightness(0%); /* 라이트 모드에서는 로고를 검정색으로 */
+}
+
+body.dark {
+  --background: var(--dark-background);
+  --surface: var(--dark-surface);
+  --text-primary: var(--dark-text-primary);
+  --text-secondary: var(--dark-text-secondary);
+  --border: var(--dark-border);
+  --input-background: var(--dark-input-background);
+  --button-background: var(--dark-button-background);
+  --button-hover: var(--dark-button-hover);
+  --primary: var(--dark-primary);
+  --primary-hover: var(--dark-primary-hover);
+  --logo-filter: brightness(100%); /* 다크 모드에서는 로고를 원래 색상으로 */
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+} 

@@ -1,6 +1,6 @@
 import { Token } from '@uniswap/sdk-core'
 import { useState } from 'react'
-import { useBalance } from 'wagmi'
+import { useAccount, useBalance } from 'wagmi'
 import TokenSelectModal from './TokenSelectModal'
 import './TokenInput.css'
 
@@ -36,6 +36,7 @@ const TokenInput = ({
   otherToken
 }: TokenInputProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { isConnected } = useAccount()
   
   const { data: balance } = useBalance({
     address: undefined, // 현재 연결된 지갑 주소 사용
@@ -70,6 +71,14 @@ const TokenInput = ({
     ? (Number(balance.value) / (10 ** (token?.decimals || 18))).toFixed(4)
     : '0'
 
+  const handleTokenSelect = () => {
+    if (!isConnected) {
+      // 지갑이 연결되지 않은 경우 모달을 열지 않음
+      return
+    }
+    setIsModalOpen(true)
+  }
+
   return (
     <div className="token-input-container">
       <div className="token-input-header">
@@ -93,20 +102,23 @@ const TokenInput = ({
           onChange={handleAmountChange}
           placeholder="0.0"
           className="amount-input"
+          disabled={!isConnected}
         />
         <button
-          className="token-select-button"
-          onClick={() => setIsModalOpen(true)}
+          className={`token-select-button ${!isConnected ? 'disabled' : ''}`}
+          onClick={handleTokenSelect}
         >
           {token ? token.symbol : 'Select Token'}
         </button>
       </div>
-      <TokenSelectModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSelect={onTokenChange}
-        otherToken={otherToken}
-      />
+      {isConnected && (
+        <TokenSelectModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSelect={onTokenChange}
+          otherToken={otherToken}
+        />
+      )}
     </div>
   )
 }
