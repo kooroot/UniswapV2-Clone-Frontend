@@ -32,8 +32,8 @@ const Header = () => {
   const handleDisconnect = async () => {
     setDisconnecting(true)
     try {
-      await disconnect()
-      await queryClient.clear()
+      disconnect()
+      queryClient.clear()
       setTimeout(() => {
         setShowDisconnectModal(false)
         setDisconnecting(false)
