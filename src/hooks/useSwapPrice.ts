@@ -1,37 +1,56 @@
 import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
-import { FACTORY_ADDRESS } from '../constants/addresses'
+import { Token } from '@uniswap/sdk-core'
+import { PublicClient } from 'viem'
+import { FACTORY_ADDRESS, WETH_ADDRESS } from '../constants/addresses'
 import { FACTORY_ABI } from '../constants/abis/Factory'
 
 export const useSwapPrice = (
-  tokenIn,
-  tokenOut,
-  amountIn,
-  publicClient
+  tokenIn: Token | null,
+  tokenOut: Token | null,
+  amountIn: string,
+  publicClient: PublicClient
 ) => {
-  const [loading, setLoading] = useState(false)
+  const [price, setPrice] = useState<string>('0')
+  const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [amountOut, setAmountOut] = useState<string>('')
   const [priceImpact, setPriceImpact] = useState<number>(0)
 
   useEffect(() => {
-    const fetchPrice = async () => {
-      if (!tokenIn || !tokenOut || !amountIn || !publicClient) {
+    const calculatePrice = async () => {
+      if (!tokenIn || !tokenOut || !amountIn || amountIn === '0') {
+        setPrice('0')
         setAmountOut('')
         setPriceImpact(0)
         return
       }
 
+      setLoading(true)
       try {
-        setLoading(true)
-        setError(null)
+        const tokenInAddress = tokenIn.isNative ? WETH_ADDRESS : tokenIn.address as `0x${string}`
+        const tokenOutAddress = tokenOut.isNative ? WETH_ADDRESS : tokenOut.address as `0x${string}`
+
+        // ETH와 WETH 간의 1:1 교환 (pair 조회 없이 바로 처리)
+        if (
+          (tokenIn.isNative && tokenOut.address === WETH_ADDRESS) ||
+          (tokenOut.isNative && tokenIn.address === WETH_ADDRESS) ||
+          (tokenIn.address === 'ETH' && tokenOut.address === WETH_ADDRESS) ||
+          (tokenOut.address === 'ETH' && tokenIn.address === WETH_ADDRESS)
+        ) {
+          setAmountOut(amountIn)
+          setPriceImpact(0)
+          setPrice(amountIn)
+          setLoading(false)
+          return
+        }
 
         // 1. 페어 주소 조회
         const pairAddress = await publicClient.readContract({
           address: FACTORY_ADDRESS,
           abi: FACTORY_ABI,
           functionName: 'getPair',
-          args: [tokenIn.address, tokenOut.address],
+          args: [tokenInAddress, tokenOutAddress],
         })
 
         if (!pairAddress || pairAddress === '0x0000000000000000000000000000000000000000') {
@@ -76,7 +95,7 @@ export const useSwapPrice = (
         })
 
         let reserveIn, reserveOut
-        if (token0.toLowerCase() === tokenIn.address.toLowerCase()) {
+        if (token0.toLowerCase() === tokenInAddress.toLowerCase()) {
           reserveIn = reserve0
           reserveOut = reserve1
         } else {
@@ -104,7 +123,7 @@ export const useSwapPrice = (
       }
     }
 
-    fetchPrice()
+    calculatePrice()
   }, [tokenIn, tokenOut, amountIn, publicClient])
 
   return { amountOut, priceImpact, loading, error }
