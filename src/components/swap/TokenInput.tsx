@@ -2,7 +2,7 @@ import { Token } from '@uniswap/sdk-core'
 import { useState } from 'react'
 import { useAccount, useBalance } from 'wagmi'
 import TokenSelectModal from './TokenSelectModal'
-import './TokenInput.css'
+import '../../styles/swap.css'
 
 interface TokenInputProps {
   token: Token | null
@@ -36,27 +36,40 @@ const TokenInput = ({
   otherToken
 }: TokenInputProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { isConnected } = useAccount()
+  const { isConnected, address } = useAccount()
   
   const { data: balance } = useBalance({
-    address: undefined, // 현재 연결된 지갑 주소 사용
-    token: token?.address as `0x${string}`,
+    address: address, // 현재 연결된 지갑 주소
+    token: token && token.address !== 'ETH' ? (token.address as `0x${string}`) : undefined,
     chainId: token?.chainId,
-    enabled: !!token,
+    enabled: !!token && !!isConnected && !!address,
   })
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
-    
+
     // 숫자와 소수점만 허용
     if (!/^\d*\.?\d*$/.test(value)) return
-    
-    // 소수점 제한
+
+    // 소수점 이하 자릿수 제한
     if (token && value.includes('.')) {
       const [, decimal] = value.split('.')
       if (decimal && decimal.length > token.decimals) return
     }
-    
+
+    // 빈 문자열, '.'만 입력된 경우는 허용
+    if (value === '' || value === '.') {
+      onAmountChange(value)
+      return
+    }
+
+    // 잔액 초과 제한 (정상적인 숫자일 때만)
+    if (balance) {
+      const max = Number(balance.value) / (10 ** (token?.decimals || 18))
+      const numValue = Number(value)
+      if (!isNaN(numValue) && numValue > max) return
+    }
+
     onAmountChange(value)
   }
 
@@ -98,7 +111,7 @@ const TokenInput = ({
         <input
           type="text"
           inputMode="decimal"
-          value={formatNumber(amount)}
+          value={amount}
           onChange={handleAmountChange}
           placeholder="0.0"
           className="amount-input"

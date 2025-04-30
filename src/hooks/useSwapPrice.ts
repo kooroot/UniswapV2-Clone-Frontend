@@ -1,19 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Token, CurrencyAmount } from '@uniswap/sdk-core'
-import { Pool } from '@uniswap/v3-sdk'
+import { Pair } from '@uniswap/v2-sdk'
 import { ethers } from 'ethers'
 import { PublicClient } from 'viem'
-import IUniswapV3PoolABI from '@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json'
-
-interface PoolInfo {
-  token0: string
-  token1: string
-  fee: number
-  tickSpacing: number
-  sqrtPriceX96: bigint
-  liquidity: bigint
-  tick: number
-}
+import { FACTORY_ADDRESS } from '../constants/addresses'
+import { FACTORY_ABI } from '../constants/abis/Factory'
 
 export const useSwapPrice = (
   tokenIn: Token | null,
@@ -38,61 +29,63 @@ export const useSwapPrice = (
         setLoading(true)
         setError(null)
 
-        // 풀 주소 계산
-        const poolAddress = computePoolAddress({
-          tokenA: tokenIn,
-          tokenB: tokenOut,
-          fee: 3000 // 0.3% fee tier
+        // 페어 주소 조회
+        const pairAddress = await publicClient.readContract({
+          address: FACTORY_ADDRESS as `0x${string}`,
+          abi: FACTORY_ABI,
+          functionName: 'getPair',
+          args: [tokenIn.address, tokenOut.address],
         })
 
-        // 풀 데이터 가져오기
-        const [slot0, liquidity] = await Promise.all([
-          publicClient.readContract({
-            address: poolAddress as `0x${string}`,
-            abi: IUniswapV3PoolABI.abi,
-            functionName: 'slot0'
-          }),
-          publicClient.readContract({
-            address: poolAddress as `0x${string}`,
-            abi: IUniswapV3PoolABI.abi,
-            functionName: 'liquidity'
-          })
-        ])
-
-        const poolInfo: PoolInfo = {
-          token0: await publicClient.readContract({
-            address: poolAddress as `0x${string}`,
-            abi: IUniswapV3PoolABI.abi,
-            functionName: 'token0'
-          }),
-          token1: await publicClient.readContract({
-            address: poolAddress as `0x${string}`,
-            abi: IUniswapV3PoolABI.abi,
-            functionName: 'token1'
-          }),
-          fee: await publicClient.readContract({
-            address: poolAddress as `0x${string}`,
-            abi: IUniswapV3PoolABI.abi,
-            functionName: 'fee'
-          }),
-          tickSpacing: await publicClient.readContract({
-            address: poolAddress as `0x${string}`,
-            abi: IUniswapV3PoolABI.abi,
-            functionName: 'tickSpacing'
-          }),
-          sqrtPriceX96: slot0[0],
-          liquidity,
-          tick: slot0[1],
+        if (pairAddress === '0x0000000000000000000000000000000000000000') {
+          setError('No liquidity pool found')
+          return
         }
 
-        // Pool 인스턴스 생성
-        const pool = new Pool(
-          tokenIn,
-          tokenOut,
-          poolInfo.fee,
-          poolInfo.sqrtPriceX96.toString(),
-          poolInfo.liquidity.toString(),
-          poolInfo.tick
+        // 페어 컨트랙트에서 리저브 조회
+        const [reserve0, reserve1] = await Promise.all([
+          publicClient.readContract({
+            address: pairAddress as `0x${string}`,
+            abi: [
+              {
+                inputs: [],
+                name: 'getReserves',
+                outputs: [
+                  { internalType: 'uint112', name: '_reserve0', type: 'uint112' },
+                  { internalType: 'uint112', name: '_reserve1', type: 'uint112' },
+                  { internalType: 'uint32', name: '_blockTimestampLast', type: 'uint32' },
+                ],
+                stateMutability: 'view',
+                type: 'function',
+              },
+            ],
+            functionName: 'getReserves',
+          }),
+        ])
+
+        // 토큰 순서 확인
+        const token0 = await publicClient.readContract({
+          address: pairAddress as `0x${string}`,
+          abi: [
+            {
+              inputs: [],
+              name: 'token0',
+              outputs: [{ internalType: 'address', name: '', type: 'address' }],
+              stateMutability: 'view',
+              type: 'function',
+            },
+          ],
+          functionName: 'token0',
+        })
+
+        const [reserveIn, reserveOut] = token0.toLowerCase() === tokenIn.address.toLowerCase()
+          ? [reserve0, reserve1]
+          : [reserve1, reserve0]
+
+        // Pair 인스턴스 생성
+        const pair = new Pair(
+          CurrencyAmount.fromRawAmount(tokenIn, reserveIn),
+          CurrencyAmount.fromRawAmount(tokenOut, reserveOut)
         )
 
         // 입력 금액을 CurrencyAmount로 변환
@@ -102,22 +95,22 @@ export const useSwapPrice = (
         )
 
         // 가격 계산
-        const quote = await pool.getOutputAmount(amount)
-        const outputAmount = ethers.utils.formatUnits(
-          quote[0].quotient.toString(),
+        const [outputAmount] = pair.getOutputAmount(amount)
+        const formattedAmount = ethers.utils.formatUnits(
+          outputAmount.quotient.toString(),
           tokenOut.decimals
         )
 
         // 가격 영향 계산
-        const midPrice = pool.token0Price
-        const executionPrice = quote[0].divide(amount)
+        const midPrice = pair.priceOf(tokenIn)
+        const executionPrice = outputAmount.divide(amount)
         const impact = Math.abs(
           ((Number(executionPrice.toSignificant()) - Number(midPrice.toSignificant())) /
             Number(midPrice.toSignificant())) *
             100
         )
 
-        setAmountOut(outputAmount)
+        setAmountOut(formattedAmount)
         setPriceImpact(impact)
       } catch (err) {
         console.error('Error fetching price:', err)
@@ -133,31 +126,4 @@ export const useSwapPrice = (
   }, [tokenIn, tokenOut, amountIn, publicClient])
 
   return { amountOut, priceImpact, loading, error }
-}
-
-// 풀 주소 계산 함수
-function computePoolAddress({
-  tokenA,
-  tokenB,
-  fee
-}: {
-  tokenA: Token
-  tokenB: Token
-  fee: number
-}): string {
-  // 실제로는 더 복잡한 계산이 필요하지만, 예시를 위해 간단히 구현
-  const [token0, token1] = tokenA.sortsBefore(tokenB)
-    ? [tokenA, tokenB]
-    : [tokenB, tokenA]
-  
-  return ethers.utils.getCreate2Address(
-    '0x1F98431c8aD98523631AE4a59f267346ea31F984', // Factory address
-    ethers.utils.keccak256(
-      ethers.utils.defaultAbiCoder.encode(
-        ['address', 'address', 'uint24'],
-        [token0.address, token1.address, fee]
-      )
-    ),
-    ethers.utils.keccak256(IUniswapV3PoolABI.bytecode)
-  )
 } 

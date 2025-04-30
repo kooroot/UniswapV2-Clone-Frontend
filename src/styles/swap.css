@@ -1,0 +1,304 @@
+/* ===== Swap Page/Card ===== */
+.swap-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+  padding: 20px;
+}
+
+.swap-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 20px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.swap-arrow-container {
+  display: flex;
+  justify-content: center;
+  margin: -8px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.swap-arrow-button {
+  background: var(--button-background);
+  border: 4px solid var(--surface);
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.swap-arrow-button:hover {
+  background: var(--button-hover);
+  color: var(--text-primary);
+  transform: rotate(180deg);
+}
+
+.swap-info {
+  background: var(--input-background);
+  border-radius: 16px;
+  padding: 12px;
+  margin: 16px 0;
+}
+
+.price-impact {
+  color: var(--text-primary);
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.warning {
+  color: #f6851b;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.swap-button {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  background: var(--primary);
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: all 0.2s ease;
+}
+
+.swap-button:hover:not(.disabled) {
+  background: var(--primary-hover);
+}
+
+.swap-button.disabled {
+  background: var(--button-background);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+/* ===== TokenInput ===== */
+.token-input-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.token-input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.token-balance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.max-button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.max-button:hover {
+  color: var(--primary-hover);
+}
+
+.token-input-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.amount-input {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-primary);
+  width: 100%;
+  outline: none;
+}
+
+.amount-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.amount-input:disabled {
+  cursor: not-allowed;
+  color: var(--text-secondary);
+}
+
+.token-select-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--button-background);
+  border: none;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.token-select-button:hover:not(.disabled) {
+  background: var(--button-hover);
+}
+
+.token-select-button.disabled {
+  background: var(--button-background);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* ===== TokenSelectModal ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #1a1a1a;
+  border-radius: 20px;
+  padding: 20px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 20px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.close-button:hover {
+  color: white;
+}
+
+.search-container {
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #333;
+  border-radius: 12px;
+  background: #0a0a0a;
+  color: white;
+  font-size: 16px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #2172e5;
+}
+
+.token-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.token-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  justify-content: space-between;
+}
+
+.token-item:hover:not(.disabled) {
+  background: #333;
+}
+
+.token-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #1a1a1a;
+}
+
+.token-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.token-symbol {
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.token-name {
+  color: #666;
+  font-size: 14px;
+}
+
+.token-disabled-text {
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.token-balance {
+  color: #666;
+  font-size: 12px;
+  margin-top: 2px;
+} 
