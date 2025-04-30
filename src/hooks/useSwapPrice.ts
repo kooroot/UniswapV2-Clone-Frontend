@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Token, CurrencyAmount } from '@uniswap/sdk-core'
-import { Pair } from '@uniswap/v2-sdk'
 import { ethers } from 'ethers'
-import { PublicClient } from 'viem'
 import { FACTORY_ADDRESS } from '../constants/addresses'
 import { FACTORY_ABI } from '../constants/abis/Factory'
 
 export const useSwapPrice = (
-  tokenIn: Token | null,
-  tokenOut: Token | null,
-  amountIn: string,
-  publicClient: PublicClient | null
+  tokenIn,
+  tokenOut,
+  amountIn,
+  publicClient
 ) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,43 +26,43 @@ export const useSwapPrice = (
         setLoading(true)
         setError(null)
 
-        // 페어 주소 조회
+        // 1. 페어 주소 조회
         const pairAddress = await publicClient.readContract({
-          address: FACTORY_ADDRESS as `0x${string}`,
+          address: FACTORY_ADDRESS,
           abi: FACTORY_ABI,
           functionName: 'getPair',
           args: [tokenIn.address, tokenOut.address],
         })
 
-        if (pairAddress === '0x0000000000000000000000000000000000000000') {
+        if (!pairAddress || pairAddress === '0x0000000000000000000000000000000000000000') {
           setError('No liquidity pool found')
+          setAmountOut('')
+          setPriceImpact(0)
           return
         }
 
-        // 페어 컨트랙트에서 리저브 조회
-        const [reserve0, reserve1] = await Promise.all([
-          publicClient.readContract({
-            address: pairAddress as `0x${string}`,
-            abi: [
-              {
-                inputs: [],
-                name: 'getReserves',
-                outputs: [
-                  { internalType: 'uint112', name: '_reserve0', type: 'uint112' },
-                  { internalType: 'uint112', name: '_reserve1', type: 'uint112' },
-                  { internalType: 'uint32', name: '_blockTimestampLast', type: 'uint32' },
-                ],
-                stateMutability: 'view',
-                type: 'function',
-              },
-            ],
-            functionName: 'getReserves',
-          }),
-        ])
+        // 2. 리저브 조회
+        const [reserve0, reserve1] = await publicClient.readContract({
+          address: pairAddress,
+          abi: [
+            {
+              inputs: [],
+              name: 'getReserves',
+              outputs: [
+                { internalType: 'uint112', name: '_reserve0', type: 'uint112' },
+                { internalType: 'uint112', name: '_reserve1', type: 'uint112' },
+                { internalType: 'uint32', name: '_blockTimestampLast', type: 'uint32' },
+              ],
+              stateMutability: 'view',
+              type: 'function',
+            },
+          ],
+          functionName: 'getReserves',
+        })
 
-        // 토큰 순서 확인
+        // 3. 토큰 순서에 따라 reserveIn, reserveOut 결정
         const token0 = await publicClient.readContract({
-          address: pairAddress as `0x${string}`,
+          address: pairAddress,
           abi: [
             {
               inputs: [],
@@ -78,42 +75,27 @@ export const useSwapPrice = (
           functionName: 'token0',
         })
 
-        const [reserveIn, reserveOut] = token0.toLowerCase() === tokenIn.address.toLowerCase()
-          ? [reserve0, reserve1]
-          : [reserve1, reserve0]
+        let reserveIn, reserveOut
+        if (token0.toLowerCase() === tokenIn.address.toLowerCase()) {
+          reserveIn = reserve0
+          reserveOut = reserve1
+        } else {
+          reserveIn = reserve1
+          reserveOut = reserve0
+        }
 
-        // Pair 인스턴스 생성
-        const pair = new Pair(
-          CurrencyAmount.fromRawAmount(tokenIn, reserveIn),
-          CurrencyAmount.fromRawAmount(tokenOut, reserveOut)
-        )
-
-        // 입력 금액을 CurrencyAmount로 변환
-        const amount = CurrencyAmount.fromRawAmount(
-          tokenIn,
-          ethers.utils.parseUnits(amountIn, tokenIn.decimals).toString()
-        )
-
-        // 가격 계산
-        const [outputAmount] = pair.getOutputAmount(amount)
-        const formattedAmount = ethers.utils.formatUnits(
-          outputAmount.quotient.toString(),
-          tokenOut.decimals
-        )
-
-        // 가격 영향 계산
-        const midPrice = pair.priceOf(tokenIn)
-        const executionPrice = outputAmount.divide(amount)
-        const impact = Math.abs(
-          ((Number(executionPrice.toSignificant()) - Number(midPrice.toSignificant())) /
-            Number(midPrice.toSignificant())) *
-            100
-        )
+        // 4. X*Y=K 공식으로 amountOut 계산 (수수료 0.3% 반영)
+        const amountInWithFee = ethers.utils.parseUnits(amountIn, tokenIn.decimals).mul(997)
+        const reserveInBN = ethers.BigNumber.from(reserveIn.toString())
+        const reserveOutBN = ethers.BigNumber.from(reserveOut.toString())
+        const numerator = amountInWithFee.mul(reserveOutBN)
+        const denominator = reserveInBN.mul(1000).add(amountInWithFee)
+        const amountOutBN = numerator.div(denominator)
+        const formattedAmount = ethers.utils.formatUnits(amountOutBN, tokenOut.decimals)
 
         setAmountOut(formattedAmount)
-        setPriceImpact(impact)
+        setPriceImpact(0) // (간단화, 필요시 추가 계산)
       } catch (err) {
-        console.error('Error fetching price:', err)
         setError('Failed to fetch price')
         setAmountOut('')
         setPriceImpact(0)
