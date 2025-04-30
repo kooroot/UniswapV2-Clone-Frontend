@@ -1,0 +1,54 @@
+.header {
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  padding: 16px 0;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo img {
+  height: 32px;
+}
+
+.nav {
+  display: flex;
+  gap: 16px;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.nav-button:hover {
+  background: #333;
+}
+
+.connect-button {
+  background: #2172e5;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.connect-button:hover {
+  background: #1a5fd1;
+} 

@@ -1,0 +1,76 @@
+.token-input-container {
+  background: #191919;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.token-input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.token-balance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.max-button {
+  background: none;
+  border: 1px solid #2172e5;
+  color: #2172e5;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.max-button:hover {
+  background: #2172e5;
+  color: white;
+}
+
+.token-input-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.amount-input {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 100%;
+  outline: none;
+}
+
+.amount-input::placeholder {
+  color: #666;
+}
+
+.token-select-button {
+  background: #2a2a2a;
+  border: none;
+  border-radius: 20px;
+  color: white;
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.token-select-button:hover {
+  background: #333;
+} 
