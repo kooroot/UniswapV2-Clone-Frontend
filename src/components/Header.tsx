@@ -2,6 +2,7 @@ import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { injected } from 'wagmi/connectors'
 import { useTheme } from '../context/ThemeContext'
 import { FiSun, FiMoon } from 'react-icons/fi'
+import { GiUnicorn } from 'react-icons/gi'
 import './Header.css'
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -47,7 +48,7 @@ const Header = () => {
     <header className="header">
       <div className="header-content">
         <div className="logo">
-          <img src="/logo.svg" alt="Uniswap" />
+          <GiUnicorn size={32} />Uniswap
         </div>
         <nav className="nav">
           <button className="nav-button">Swap</button>
