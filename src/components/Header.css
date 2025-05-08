@@ -61,6 +61,22 @@
   background: var(--button-hover);
 }
 
+.network-switch-button {
+  background: var(--warning);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.network-switch-button:hover {
+  background: var(--warning-hover);
+}
+
 .connect-button {
   background: var(--primary);
   color: white;

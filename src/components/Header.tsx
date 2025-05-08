@@ -1,21 +1,24 @@
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
-import { injected } from 'wagmi/connectors'
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
 import { useTheme } from '../context/ThemeContext'
+import { useNetworkCheck } from '../hooks/useNetworkCheck'
 import { FiSun, FiMoon } from 'react-icons/fi'
 import { GiUnicorn } from 'react-icons/gi'
 import './Header.css'
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { config } from '../wagmi'
 
 const Header = () => {
   const { address, isConnected } = useAccount()
   const { connect, connectors } = useConnect()
   const { disconnect } = useDisconnect()
+  const { switchChain } = useSwitchChain()
   const { theme, toggleTheme } = useTheme()
   const [showWalletModal, setShowWalletModal] = useState(false)
   const [showDisconnectModal, setShowDisconnectModal] = useState(false)
   const [disconnecting, setDisconnecting] = useState(false)
   const queryClient = useQueryClient()
+  const { showNetworkModal, setShowNetworkModal } = useNetworkCheck()
 
   const handleConnect = () => {
     if (isConnected) {
@@ -32,8 +35,8 @@ const Header = () => {
   const handleDisconnect = async () => {
     setDisconnecting(true)
     try {
-      disconnect()
-      queryClient.clear()
+      await disconnect()
+      await queryClient.clear()
       setTimeout(() => {
         setShowDisconnectModal(false)
         setDisconnecting(false)
@@ -41,6 +44,15 @@ const Header = () => {
     } catch (e) {
       setDisconnecting(false)
       setShowDisconnectModal(false)
+    }
+  }
+
+  const handleSwitchNetwork = async () => {
+    try {
+      await switchChain({ chainId: 31337 })
+      setShowNetworkModal(false)
+    } catch (error) {
+      console.error('Failed to switch network:', error)
     }
   }
 
@@ -102,6 +114,20 @@ const Header = () => {
               {disconnecting ? 'Disconnecting...' : 'Disconnect'}
             </button>
             <button style={{ width: '100%', marginTop: 8, padding: 10, borderRadius: 8, background: '#444', color: 'white', border: 'none', fontWeight: 500, fontSize: 15, cursor: 'pointer' }} onClick={() => setShowDisconnectModal(false)} disabled={disconnecting}>취소</button>
+          </div>
+        </div>
+      )}
+      {showNetworkModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#222', padding: 32, borderRadius: 12, minWidth: 320 }}>
+            <h3 style={{ color: 'white', marginBottom: 16 }}>네트워크 전환 필요</h3>
+            <p style={{ color: 'white', marginBottom: 24 }}>이 앱은 Anvil 네트워크에서만 동작합니다.</p>
+            <button
+              style={{ width: '100%', padding: 12, borderRadius: 8, background: '#2563eb', color: 'white', border: 'none', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}
+              onClick={handleSwitchNetwork}
+            >
+              Anvil 네트워크로 전환
+            </button>
           </div>
         </div>
       )}

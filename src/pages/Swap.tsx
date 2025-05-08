@@ -196,7 +196,7 @@ const Swap = () => {
             </div>
           )}
           <div className="slippage">
-            <span>Slippage Tolerance</span>
+            <span>Slippage Tolerance </span>
             <span>{slippage}%</span>
           </div>
         </div>
