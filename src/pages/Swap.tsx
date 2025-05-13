@@ -20,10 +20,10 @@ const Swap = () => {
   const { writeAsync, isPending } = useWriteContract()
   
   const [fromToken, setFromToken] = useState<Token | null>(
-    new Token(31337, TEST_TOKENS.TOKENA as `0x${string}`, 18, 'TokenA', 'TokenA')
+    new Token(31337, TEST_TOKENS.TOKENA as `0x${string}`, 18, 'TOKENA', 'TOKENA')
   )
   const [toToken, setToToken] = useState<Token | null>(
-    new Token(31337, TEST_TOKENS.TOKENB as `0x${string}`, 18, 'TokenB', 'TokenB')
+    new Token(31337, TEST_TOKENS.TOKENB as `0x${string}`, 18, 'TOKENB', 'TOKENB')
   )
   const [amount, setAmount] = useState<string>('')
   const [slippage, setSlippage] = useState<number>(0.5) // 기본 슬리피지 0.5%
